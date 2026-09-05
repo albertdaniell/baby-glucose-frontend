@@ -97,6 +97,48 @@ export default function BabyDrugs({ babyId, baby }) {
        IMAGE HELPER
     ===================================================== */
 
+    /* =====================================================
+   GROUP UPCOMING DRUGS BY TIME
+===================================================== */
+
+const groupedUpcoming = upcoming.reduce(
+    (groups, record) => {
+
+        const time =
+            record.proposed_time ||
+            record.scheduled_time ||
+            "Unknown";
+
+
+        if (!groups[time]) {
+
+            groups[time] = [];
+
+        }
+
+
+        groups[time].push(record);
+
+
+        return groups;
+
+    },
+    {}
+);
+
+
+/* =====================================================
+   SORT GROUPS BY TIME
+===================================================== */
+
+const upcomingTimeGroups = Object.entries(
+    groupedUpcoming
+).sort(([timeA], [timeB]) => {
+
+    return timeA.localeCompare(timeB);
+
+});
+
     function getDrugImage(item) {
 
         if (!item) {
@@ -1266,130 +1308,312 @@ export default function BabyDrugs({ babyId, baby }) {
 
                     {/* UPCOMING LIST */}
 
-                    {upcoming.length > 0 && (
+                   {upcoming.length > 0 && (
 
-                        <section className="rounded-3xl bg-white p-6 shadow-sm">
+    <section className="rounded-3xl bg-white p-6 shadow-sm">
 
-                            <div className="flex items-center justify-between gap-4">
 
-                                <div>
+        {/* =============================================
+            HEADER
+        ============================================= */}
 
-                                    <h2 className="font-[family-name:var(--font-baloo)] text-2xl text-slate-800">
+        <div className="flex items-center justify-between gap-4">
 
-                                        Today's Schedule
+            <div>
 
-                                    </h2>
+                <h2 className="font-[family-name:var(--font-baloo)] text-2xl text-slate-800">
 
-                                    <p className="mt-1 text-sm text-slate-500">
+                    Today's Schedule
 
-                                        {upcoming.length} upcoming{" "}
+                </h2>
 
-                                        {upcoming.length === 1
+
+                <p className="mt-1 text-sm text-slate-500">
+
+                    {upcoming.length} upcoming{" "}
+
+                    {upcoming.length === 1
+                        ? "medicine"
+                        : "medicines"
+                    }
+
+                    {" "}in{" "}
+
+                    {upcomingTimeGroups.length}{" "}
+
+                    {upcomingTimeGroups.length === 1
+                        ? "time"
+                        : "time slots"
+                    }
+
+                </p>
+
+            </div>
+
+        </div>
+
+
+        {/* =============================================
+            TIME GROUPS
+        ============================================= */}
+
+        <div className="mt-6 space-y-6">
+
+
+            {upcomingTimeGroups.map(
+                ([time, medicines]) => {
+
+
+                    const isCurrentGroupNext =
+
+                        nextDrug &&
+
+                        medicines.some(
+                            (medicine) =>
+
+                                String(medicine.id) ===
+                                String(nextDrug.id)
+                        );
+
+
+                    return (
+
+                        <div
+                            key={time}
+                            className={`overflow-hidden rounded-3xl border transition ${
+                                isCurrentGroupNext
+                                    ? "border-orange-200 bg-orange-50/50"
+                                    : "border-slate-100 bg-slate-50/50"
+                            }`}
+                        >
+
+
+                            {/* =====================================
+                                TIME HEADER
+                            ===================================== */}
+
+                            <div
+                                className={`flex items-center justify-between px-5 py-4 ${
+                                    isCurrentGroupNext
+                                        ? "bg-orange-100"
+                                        : "bg-slate-100"
+                                }`}
+                            >
+
+
+                                <div className="flex items-center gap-3">
+
+
+                                    <div
+                                        className={`flex h-11 w-11 items-center justify-center rounded-2xl text-xl ${
+                                            isCurrentGroupNext
+                                                ? "bg-orange-500 text-white"
+                                                : "bg-white text-slate-600 shadow-sm"
+                                        }`}
+                                    >
+
+                                        ⏰
+
+                                    </div>
+
+
+                                    <div>
+
+                                        <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+
+                                            Scheduled Time
+
+                                        </p>
+
+
+                                        <h3 className="text-lg font-bold text-slate-800">
+
+                                            {formatTime(time)}
+
+                                        </h3>
+
+                                    </div>
+
+                                </div>
+
+
+                                <div className="flex items-center gap-2">
+
+
+                                    <span className="rounded-full bg-white/80 px-3 py-1 text-xs font-semibold text-slate-600">
+
+                                        {medicines.length}{" "}
+
+                                        {medicines.length === 1
                                             ? "medicine"
                                             : "medicines"
                                         }
 
-                                    </p>
+                                    </span>
+
+
+                                    {isCurrentGroupNext && (
+
+                                        <span className="rounded-full bg-orange-500 px-3 py-1 text-xs font-bold text-white">
+
+                                            NEXT
+
+                                        </span>
+
+                                    )}
 
                                 </div>
 
                             </div>
 
 
-                            <div className="mt-6 space-y-3">
+                            {/* =====================================
+                                MEDICINES IN THIS TIME SLOT
+                            ===================================== */}
 
-                                {upcoming.map((record, index) => {
-
-                                    const image =
-                                        getDrugImage(record);
-
-                                    const isNext =
-                                        nextDrug &&
-                                        String(record.id) ===
-                                        String(nextDrug.id);
+                            <div className="space-y-2 p-3">
 
 
-                                    return (
-
-                                        <div
-                                            key={record.id}
-                                            className={`flex items-center justify-between gap-4 rounded-2xl border p-4 transition ${
-                                                isNext
-                                                    ? "border-orange-200 bg-orange-50"
-                                                    : "border-slate-100 bg-slate-50 hover:bg-slate-100"
-                                            }`}
-                                        >
+                                {medicines.map(
+                                    (record, medicineIndex) => {
 
 
-                                            {/* LEFT */}
-
-                                            <div className="flex min-w-0 items-center gap-4">
-
-
-                                                {/* IMAGE */}
-
-                                                {image ? (
-
-                                                    <img
-                                                        src={image}
-                                                        alt={
-                                                            getDrugName(record)
-                                                        }
-                                                        className="h-16 w-16 shrink-0 rounded-2xl object-cover"
-                                                    />
-
-                                                ) : (
-
-                                                    <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white text-3xl shadow-sm">
-
-                                                        💊
-
-                                                    </div>
-
-                                                )}
+                                        const image =
+                                            getDrugImage(record);
 
 
-                                                {/* DETAILS */}
+                                        const isNext =
 
-                                                <div className="min-w-0">
+                                            nextDrug &&
 
-                                                    <div className="flex flex-wrap items-center gap-2">
+                                            String(record.id) ===
+                                            String(nextDrug.id);
 
-                                                        <p className="truncate font-bold text-slate-800">
 
-                                                            💊{" "}
+                                        return (
 
-                                                            {
+                                            <div
+                                                key={record.id}
+                                                className={`flex items-center justify-between gap-4 rounded-2xl p-4 transition ${
+                                                    isNext
+                                                        ? "bg-orange-50 ring-1 ring-orange-200"
+                                                        : "bg-white hover:bg-slate-50"
+                                                }`}
+                                            >
+
+
+                                                {/* =====================
+                                                    LEFT
+                                                ===================== */}
+
+                                                <div className="flex min-w-0 items-center gap-4">
+
+
+                                                    {/* IMAGE */}
+
+                                                    {image ? (
+
+                                                        <img
+                                                            src={image}
+                                                            alt={
                                                                 getDrugName(
                                                                     record
                                                                 )
                                                             }
+                                                            className="h-14 w-14 shrink-0 rounded-2xl object-cover shadow-sm"
+                                                        />
 
-                                                        </p>
+                                                    ) : (
+
+                                                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-slate-100 text-2xl">
+
+                                                            💊
+
+                                                        </div>
+
+                                                    )}
 
 
-                                                        {isNext && (
+                                                    {/* DETAILS */}
 
-                                                            <span className="rounded-full bg-orange-200 px-2 py-1 text-xs font-bold text-orange-700">
+                                                    <div className="min-w-0">
 
-                                                                NEXT
+
+                                                        <div className="flex flex-wrap items-center gap-2">
+
+
+                                                            <p className="truncate font-bold text-slate-800">
+
+                                                                💊{" "}
+
+                                                                {
+                                                                    getDrugName(
+                                                                        record
+                                                                    )
+                                                                }
+
+                                                            </p>
+
+
+                                                            {isNext && (
+
+                                                                <span className="rounded-full bg-orange-200 px-2 py-1 text-[10px] font-bold text-orange-700">
+
+                                                                    NEXT
+
+                                                                </span>
+
+                                                            )}
+
+                                                        </div>
+
+
+                                                        <p className="mt-1 text-sm text-slate-500">
+
+                                                            Take at{" "}
+
+                                                            <span className="font-semibold">
+
+                                                                {
+                                                                    formatTime(
+                                                                        time
+                                                                    )
+                                                                }
 
                                                             </span>
 
-                                                        )}
+                                                        </p>
 
                                                     </div>
 
+                                                </div>
 
-                                                    <p className="mt-1 text-sm text-slate-500">
 
-                                                        ⏰{" "}
+                                                {/* =====================
+                                                    RIGHT / DOSE
+                                                ===================== */}
+
+                                                <div className="shrink-0 text-right">
+
+
+                                                    <p className="text-lg font-bold text-slate-800">
 
                                                         {
-                                                            formatTime(
-                                                                record.proposed_time ||
-                                                                record.scheduled_time
-                                                            )
+                                                            getDrugAmount(
+                                                                record
+                                                            ) || "—"
+                                                        }
+
+                                                    </p>
+
+
+                                                    <p className="mt-1 text-xs text-slate-500">
+
+                                                        Dose{" "}
+
+                                                        {
+                                                            record.dose_order ||
+                                                            medicineIndex + 1
                                                         }
 
                                                     </p>
@@ -1398,46 +1622,27 @@ export default function BabyDrugs({ babyId, baby }) {
 
                                             </div>
 
+                                        );
 
-                                            {/* RIGHT */}
+                                    }
 
-                                            <div className="shrink-0 text-right">
-
-                                                <p className="text-lg font-bold text-slate-800">
-
-                                                    {
-                                                        getDrugAmount(record) ||
-                                                        "—"
-                                                    }
-
-                                                </p>
-
-
-                                                <p className="mt-1 text-xs text-slate-500">
-
-                                                    Dose{" "}
-
-                                                    {
-                                                        record.dose_order ||
-                                                        index + 1
-                                                    }
-
-                                                </p>
-
-                                            </div>
-
-                                        </div>
-
-                                    );
-
-                                })}
+                                )}
 
                             </div>
 
-                        </section>
+                        </div>
 
-                    )}
+                    );
 
+                }
+
+            )}
+
+        </div>
+
+    </section>
+
+)}
                 </div>
 
             )}
