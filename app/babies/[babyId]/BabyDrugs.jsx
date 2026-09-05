@@ -101,6 +101,36 @@ export default function BabyDrugs({ babyId, baby }) {
    GROUP UPCOMING DRUGS BY TIME
 ===================================================== */
 
+const getScheduleTime = (drug) =>
+
+    drug.proposed_time ||
+
+    drug.scheduled_time ||
+
+    "";
+
+const nextTime =
+
+    upcoming.length > 0
+
+        ? getScheduleTime(upcoming[0])
+
+        : null;
+
+const nextDrugs =
+
+    nextTime
+
+        ? upcoming.filter(
+
+            (drug) =>
+
+                getScheduleTime(drug) === nextTime
+
+        )
+
+        : [];
+
 const groupedUpcoming = upcoming.reduce(
     (groups, record) => {
 
@@ -1121,31 +1151,56 @@ const upcomingTimeGroups = Object.entries(
 
                     {/* NEXT DRUG */}
 
-                    {nextDrug && (
+                  {nextDrugs.length > 0 && (
 
     <section className="relative isolate overflow-hidden rounded-3xl bg-gradient-to-br from-orange-400 to-orange-600 p-6 text-white shadow-sm">
 
 
         {/* =============================================
-            LARGE BACKGROUND DRUG IMAGE
+            BACKGROUND DRUG IMAGES
         ============================================= */}
 
-        {getDrugImage(nextDrug) && (
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
 
-            <img
-                src={getDrugImage(nextDrug)}
-                alt=""
-                className="pointer-events-none absolute -right-8 -bottom-8 h-72 w-72 rotate-[-12deg] object-cover opacity-30"
-            />
+            {nextDrugs.slice(0, 3).map(
+                (drug, index) => {
 
-        )}
+                    const image =
+                        getDrugImage(drug);
+
+                    if (!image) {
+                        return null;
+                    }
+
+
+                    return (
+
+                        <img
+                            key={drug.id}
+                            src={image}
+                            alt=""
+                            className={`absolute h-64 w-64 object-cover opacity-25 ${
+                                index === 0
+                                    ? "-right-10 -bottom-10 rotate-[-12deg]"
+                                    : index === 1
+                                    ? "right-32 -top-16 rotate-[15deg]"
+                                    : "-left-20 bottom-0 rotate-[20deg]"
+                            }`}
+                        />
+
+                    );
+
+                }
+            )}
+
+        </div>
 
 
         {/* =============================================
-            LIGHT OVERLAY
+            OVERLAY
         ============================================= */}
 
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-orange-500/90 via-orange-500/60 to-orange-500/20" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-orange-600/95 via-orange-500/80 to-orange-500/40" />
 
 
         {/* =============================================
@@ -1155,100 +1210,161 @@ const upcomingTimeGroups = Object.entries(
         <div className="relative z-10">
 
 
-            <div className="mb-5 flex items-center gap-2 text-sm font-semibold text-white/90">
+            {/* HEADER */}
 
-                🔔 NEXT MEDICINE
+            <div className="mb-5 flex flex-wrap items-center gap-2">
+
+                <span className="text-sm font-semibold text-white/90">
+
+                    🔔
+
+                    {nextDrugs.length === 1
+                        ? " NEXT MEDICINE"
+                        : " NEXT MEDICINES"
+                    }
+
+                </span>
+
+
+                {nextDrugs.length > 1 && (
+
+                    <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-bold backdrop-blur-sm">
+
+                        {nextDrugs.length} medicines
+
+                    </span>
+
+                )}
 
             </div>
 
 
-            <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+            {/* =============================================
+                TIME
+            ============================================= */}
+
+            <div className="mb-6">
+
+                <p className="text-sm text-white/80">
+
+                    ⏰ Scheduled for
+
+                </p>
 
 
-                {/* DRUG INFORMATION */}
+                <h2 className="mt-1 text-3xl font-bold">
 
-                <div className="flex items-center gap-5">
+                    {formatTime(
+                        getScheduleTime(nextDrugs[0])
+                    )}
+
+                </h2>
+
+            </div>
 
 
-                    {/* SMALL DRUG IMAGE */}
+            {/* =============================================
+                MEDICINES
+            ============================================= */}
 
-                    {getDrugImage(nextDrug) ? (
+            <div
+                className={`grid gap-4 ${
+                    nextDrugs.length === 1
+                        ? "grid-cols-1"
+                        : "sm:grid-cols-2"
+                }`}
+            >
 
-                        <img
-                            src={getDrugImage(nextDrug)}
-                            alt={getDrugName(nextDrug)}
-                            className="h-20 w-20 rounded-2xl border-2 border-white/30 bg-white object-cover shadow-xl"
-                        />
+                {nextDrugs.map((drug) => {
 
-                    ) : (
+                    const image =
+                        getDrugImage(drug);
 
-                        <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-white/20 text-4xl backdrop-blur-sm">
 
-                            💊
+                    return (
+
+                        <div
+                            key={drug.id}
+                            className="flex items-center gap-4 rounded-2xl border border-white/20 bg-white/15 p-4 shadow-lg backdrop-blur-md"
+                        >
+
+
+                            {/* IMAGE */}
+
+                            {image ? (
+
+                                <img
+                                    src={image}
+                                    alt={getDrugName(drug)}
+                                    className="h-16 w-16 shrink-0 rounded-2xl border-2 border-white/30 bg-white object-cover shadow-lg"
+                                />
+
+                            ) : (
+
+                                <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white/20 text-3xl">
+
+                                    💊
+
+                                </div>
+
+                            )}
+
+
+                            {/* DETAILS */}
+
+                            <div className="min-w-0 flex-1">
+
+
+                                <h3 className="truncate text-lg font-bold">
+
+                                    {getDrugName(drug)}
+
+                                </h3>
+
+
+                                <p className="mt-1 text-sm text-white/80">
+
+                                    💉 Dose
+
+                                </p>
+
+
+                                <p className="font-bold">
+
+                                    {getDrugAmount(drug) || "—"}
+
+                                </p>
+
+                            </div>
 
                         </div>
 
-                    )}
+                    );
 
-
-                    {/* DRUG DETAILS */}
-
-                    <div>
-
-                        <h3 className="text-2xl font-bold drop-shadow-md">
-
-                            {getDrugName(nextDrug)}
-
-                        </h3>
-
-
-                        <p className="mt-2 text-white/95">
-
-                            ⏰ Scheduled for{" "}
-
-                            <span className="font-bold">
-
-                                {formatTime(
-                                    nextDrug.proposed_time ||
-                                    nextDrug.scheduled_time
-                                )}
-
-                            </span>
-
-                        </p>
-
-                    </div>
-
-                </div>
-
-
-                {/* DOSE */}
-
-                <div className="rounded-2xl border border-white/20 bg-white/20 px-6 py-4 text-center shadow-xl backdrop-blur-md">
-
-                    <p className="text-xs font-semibold uppercase tracking-wide text-white/70">
-
-                        Dose
-
-                    </p>
-
-
-                    <p className="mt-1 text-2xl font-bold">
-
-                        {getDrugAmount(nextDrug) || "—"}
-
-                    </p>
-
-                </div>
+                })}
 
             </div>
+
+
+            {/* =============================================
+                FOOTER MESSAGE
+            ============================================= */}
+
+            {nextDrugs.length > 1 && (
+
+                <div className="mt-5 rounded-xl bg-white/10 px-4 py-3 text-sm text-white/90 backdrop-blur-sm">
+
+                    💊 These medicines are scheduled at the same time.
+
+                </div>
+
+            )}
 
         </div>
 
     </section>
 
 )}
-
 
                     {/* EMPTY STATE */}
 
