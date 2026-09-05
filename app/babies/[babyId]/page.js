@@ -7,35 +7,35 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 async function getBaby(babyId) {
     try {
-        if (!API_URL) {
-            return {
-                data: null,
-                error: "The API connection is not configured.",
-            };
-        }
+        const url = `${API_URL}/babies/${babyId}/`;
 
-        const response = await fetch(
-            `${API_URL}/babies/${babyId}/`,
-            {
-                cache: "no-store",
-            }
-        );
+        console.log("=================================");
+        console.log("API_URL:", API_URL);
+        console.log("Fetching URL:", url);
+        console.log("Baby ID:", babyId);
+        console.log("=================================");
+
+        const response = await fetch(url, {
+            cache: "no-store",
+        });
+
+        console.log("Response status:", response.status);
+        console.log("Response OK:", response.ok);
 
         if (!response.ok) {
-            if (response.status === 404) {
-                return {
-                    data: null,
-                    error: "We could not find a baby with that unique ID.",
-                };
-            }
+            const errorText = await response.text();
+
+            console.error("API Error Response:", errorText);
 
             return {
                 data: null,
-                error: "Could not load the baby's information.",
+                error: `Could not load baby. Server returned ${response.status}.`,
             };
         }
 
         const data = await response.json();
+
+        console.log("Baby data:", data);
 
         return {
             data,
@@ -47,7 +47,7 @@ async function getBaby(babyId) {
 
         return {
             data: null,
-            error: "Unable to connect to the server. Please try again later.",
+            error: `Connection error: ${error.message}`,
         };
     }
 }
