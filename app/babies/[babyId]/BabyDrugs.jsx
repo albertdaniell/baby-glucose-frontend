@@ -134,20 +134,32 @@ const nextDrugs =
 const groupedUpcoming = upcoming.reduce(
     (groups, record) => {
 
+        const date =
+            record.scheduled_date ||
+            record.date ||
+            "";
+
         const time =
             record.proposed_time ||
             record.scheduled_time ||
             "Unknown";
 
 
-        if (!groups[time]) {
+        const key = `${date}|${time}`;
 
-            groups[time] = [];
+
+        if (!groups[key]) {
+
+            groups[key] = {
+                date,
+                time,
+                medicines: [],
+            };
 
         }
 
 
-        groups[time].push(record);
+        groups[key].medicines.push(record);
 
 
         return groups;
@@ -161,11 +173,19 @@ const groupedUpcoming = upcoming.reduce(
    SORT GROUPS BY TIME
 ===================================================== */
 
-const upcomingTimeGroups = Object.entries(
+const upcomingTimeGroups = Object.values(
     groupedUpcoming
-).sort(([timeA], [timeB]) => {
+).sort((a, b) => {
 
-    return timeA.localeCompare(timeB);
+    const dateTimeA =
+        `${a.date}T${a.time}`;
+
+    const dateTimeB =
+        `${b.date}T${b.time}`;
+
+
+    return new Date(dateTimeA) -
+        new Date(dateTimeB);
 
 });
 
@@ -1439,10 +1459,9 @@ const upcomingTimeGroups = Object.entries(
 
                 <h2 className="font-[family-name:var(--font-baloo)] text-2xl text-slate-800">
 
-                    Today's Schedule
+    Upcoming Schedule
 
-                </h2>
-
+</h2>
 
                 <p className="mt-1 text-sm text-slate-500">
 
@@ -1476,10 +1495,8 @@ const upcomingTimeGroups = Object.entries(
         <div className="mt-6 space-y-6">
 
 
-            {upcomingTimeGroups.map(
-                ([time, medicines]) => {
-
-
+          {upcomingTimeGroups.map(
+    ({ date, time, medicines }) => {
                     const isCurrentGroupNext =
 
                         nextDrug &&
@@ -1495,7 +1512,7 @@ const upcomingTimeGroups = Object.entries(
                     return (
 
                         <div
-                            key={time}
+                            key={`${date}-${time}`}
                             className={`overflow-hidden rounded-3xl border transition ${
                                 isCurrentGroupNext
                                     ? "border-orange-200 bg-orange-50/50"
