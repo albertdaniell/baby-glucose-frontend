@@ -1081,28 +1081,29 @@ export default function BabyDrugs({ babyId, baby }) {
 
                     {nextDrug && (
 
-    <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-orange-400 to-orange-500 p-6 text-white shadow-sm">
+    <section className="relative isolate overflow-hidden rounded-3xl bg-gradient-to-br from-orange-400 to-orange-600 p-6 text-white shadow-sm">
 
 
         {/* =============================================
-            BACKGROUND DRUG IMAGE
+            LARGE BACKGROUND DRUG IMAGE
         ============================================= */}
 
         {getDrugImage(nextDrug) && (
 
-            <div
-                className="absolute inset-0 bg-cover bg-center opacity-20"
-                style={{
-                    backgroundImage: `url(${getDrugImage(nextDrug)})`,
-                }}
+            <img
+                src={getDrugImage(nextDrug)}
+                alt=""
+                className="pointer-events-none absolute -right-8 -bottom-8 h-72 w-72 rotate-[-12deg] object-cover opacity-30"
             />
 
         )}
 
 
-        {/* DARK / ORANGE OVERLAY FOR READABILITY */}
+        {/* =============================================
+            LIGHT OVERLAY
+        ============================================= */}
 
-        <div className="absolute inset-0 bg-gradient-to-br from-orange-500/80 to-orange-600/90" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-orange-500/90 via-orange-500/60 to-orange-500/20" />
 
 
         {/* =============================================
@@ -1112,7 +1113,7 @@ export default function BabyDrugs({ babyId, baby }) {
         <div className="relative z-10">
 
 
-            <div className="mb-5 flex items-center gap-2 text-sm font-semibold text-white/80">
+            <div className="mb-5 flex items-center gap-2 text-sm font-semibold text-white/90">
 
                 🔔 NEXT MEDICINE
 
@@ -1122,25 +1123,19 @@ export default function BabyDrugs({ babyId, baby }) {
             <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
 
 
-                {/* =====================================
-                    DRUG INFORMATION
-                ===================================== */}
+                {/* DRUG INFORMATION */}
 
                 <div className="flex items-center gap-5">
 
 
-                    {/* IMAGE */}
+                    {/* SMALL DRUG IMAGE */}
 
                     {getDrugImage(nextDrug) ? (
 
                         <img
-                            src={
-                                getDrugImage(nextDrug)
-                            }
-                            alt={
-                                getDrugName(nextDrug)
-                            }
-                            className="h-20 w-20 rounded-2xl border border-white/30 bg-white object-cover shadow-lg"
+                            src={getDrugImage(nextDrug)}
+                            alt={getDrugName(nextDrug)}
+                            className="h-20 w-20 rounded-2xl border-2 border-white/30 bg-white object-cover shadow-xl"
                         />
 
                     ) : (
@@ -1158,25 +1153,23 @@ export default function BabyDrugs({ babyId, baby }) {
 
                     <div>
 
-                        <h3 className="text-2xl font-bold drop-shadow-sm">
+                        <h3 className="text-2xl font-bold drop-shadow-md">
 
                             {getDrugName(nextDrug)}
 
                         </h3>
 
 
-                        <p className="mt-2 text-white/90">
+                        <p className="mt-2 text-white/95">
 
                             ⏰ Scheduled for{" "}
 
                             <span className="font-bold">
 
-                                {
-                                    formatTime(
-                                        nextDrug.proposed_time ||
-                                        nextDrug.scheduled_time
-                                    )
-                                }
+                                {formatTime(
+                                    nextDrug.proposed_time ||
+                                    nextDrug.scheduled_time
+                                )}
 
                             </span>
 
@@ -1187,11 +1180,9 @@ export default function BabyDrugs({ babyId, baby }) {
                 </div>
 
 
-                {/* =====================================
-                    AMOUNT
-                ===================================== */}
+                {/* DOSE */}
 
-                <div className="rounded-2xl border border-white/20 bg-white/15 px-6 py-4 text-center shadow-lg backdrop-blur-md">
+                <div className="rounded-2xl border border-white/20 bg-white/20 px-6 py-4 text-center shadow-xl backdrop-blur-md">
 
                     <p className="text-xs font-semibold uppercase tracking-wide text-white/70">
 
@@ -1202,10 +1193,7 @@ export default function BabyDrugs({ babyId, baby }) {
 
                     <p className="mt-1 text-2xl font-bold">
 
-                        {
-                            getDrugAmount(nextDrug) ||
-                            "—"
-                        }
+                        {getDrugAmount(nextDrug) || "—"}
 
                     </p>
 
