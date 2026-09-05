@@ -525,4 +525,6 @@ export default async function BabyPage({ params }) {
         </main>
 
     );
+
 }
+//nice
