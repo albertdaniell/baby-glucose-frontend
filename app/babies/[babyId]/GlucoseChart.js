@@ -23,7 +23,7 @@ export default function GlucoseChart({ readings }) {
     const latestReadings = useMemo(() => {
 
         return readings
-            .slice(0, 10)
+            .slice(0, 5)
             .reverse()
             .map((reading) => ({
 
@@ -418,207 +418,149 @@ export default function GlucoseChart({ readings }) {
             {/* STATISTICS */}
             {/* ========================================= */}
 
-            <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-5">
+          <div className="mt-4 -mx-1 overflow-x-auto px-1 pb-2 scrollbar-thin scrollbar-thumb-slate-200 scrollbar-track-transparent">
 
+    <div className="flex w-max snap-x snap-mandatory gap-2">
 
-                {/* Latest */}
 
-                <div className="rounded-2xl border border-sky-100 bg-sky-50 p-4">
+        {/* Latest */}
 
+        <div className="w-[115px] shrink-0 snap-start rounded-lg border border-sky-100 bg-sky-50 p-2">
 
-                    <p className="text-xs font-semibold uppercase tracking-wide text-sky-600">
+            <p className="text-[9px] font-semibold uppercase tracking-wide text-sky-600">
+                Latest
+            </p>
 
-                        Latest
+            <div className="mt-1 flex items-baseline gap-0.5">
 
-                    </p>
+                <span className="text-lg font-bold text-slate-800">
+                    {Number(
+                        statistics.latest.value
+                    ).toFixed(2)}
+                </span>
 
-
-                    <div className="mt-2 flex items-baseline gap-1">
-
-
-                        <span className="text-2xl font-bold text-slate-800">
-
-                            {Number(
-                                statistics.latest.value
-                            ).toFixed(2)}
-
-                        </span>
-
-
-                        <span className="text-xs text-slate-500">
-
-                            mmol/L
-
-                        </span>
-
-                    </div>
-
-
-                    <p className="mt-2 truncate text-xs text-slate-500">
-
-                        {formatLatestDate(
-                            statistics.latest
-                        )}
-
-                    </p>
-
-                </div>
-
-
-                {/* Average */}
-
-                <div className="rounded-2xl border border-slate-200 bg-white p-4">
-
-
-                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-
-                        Average
-
-                    </p>
-
-
-                    <div className="mt-2 flex items-baseline gap-1">
-
-
-                        <span className="text-2xl font-bold text-slate-800">
-
-                            {statistics.average.toFixed(2)}
-
-                        </span>
-
-
-                        <span className="text-xs text-slate-500">
-
-                            mmol/L
-
-                        </span>
-
-                    </div>
-
-
-                    <p className="mt-2 text-xs text-slate-400">
-
-                        All readings
-
-                    </p>
-
-                </div>
-
-
-                {/* Highest */}
-
-                <div className="rounded-2xl border border-red-100 bg-red-50 p-4">
-
-
-                    <p className="text-xs font-semibold uppercase tracking-wide text-red-600">
-
-                        Highest
-
-                    </p>
-
-
-                    <div className="mt-2 flex items-baseline gap-1">
-
-
-                        <span className="text-2xl font-bold text-slate-800">
-
-                            {statistics.highest.toFixed(2)}
-
-                        </span>
-
-
-                        <span className="text-xs text-slate-500">
-
-                            mmol/L
-
-                        </span>
-
-                    </div>
-
-
-                    <p className="mt-2 text-xs text-slate-400">
-
-                        Recorded maximum
-
-                    </p>
-
-                </div>
-
-
-                {/* Lowest */}
-
-                <div className="rounded-2xl border border-indigo-100 bg-indigo-50 p-4">
-
-
-                    <p className="text-xs font-semibold uppercase tracking-wide text-indigo-600">
-
-                        Lowest
-
-                    </p>
-
-
-                    <div className="mt-2 flex items-baseline gap-1">
-
-
-                        <span className="text-2xl font-bold text-slate-800">
-
-                            {statistics.lowest.toFixed(2)}
-
-                        </span>
-
-
-                        <span className="text-xs text-slate-500">
-
-                            mmol/L
-
-                        </span>
-
-                    </div>
-
-
-                    <p className="mt-2 text-xs text-slate-400">
-
-                        Recorded minimum
-
-                    </p>
-
-                </div>
-
-
-                {/* Total */}
-
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-
-
-                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-
-                        Total Readings
-
-                    </p>
-
-
-                    <div className="mt-2">
-
-
-                        <span className="text-2xl font-bold text-slate-800">
-
-                            {statistics.totalReadings}
-
-                        </span>
-
-                    </div>
-
-
-                    <p className="mt-2 text-xs text-slate-400">
-
-                        Recorded so far
-
-                    </p>
-
-                </div>
+                <span className="text-[9px] text-slate-500">
+                    mmol/L
+                </span>
 
             </div>
 
+            <p className="mt-1 truncate text-[9px] text-slate-500">
+                {formatLatestDate(
+                    statistics.latest
+                )}
+            </p>
+
+        </div>
+
+
+        {/* Average */}
+
+        <div className="w-[115px] shrink-0 snap-start rounded-lg border border-slate-200 bg-white p-2">
+
+            <p className="text-[9px] font-semibold uppercase tracking-wide text-slate-500">
+                Average
+            </p>
+
+            <div className="mt-1 flex items-baseline gap-0.5">
+
+                <span className="text-lg font-bold text-slate-800">
+                    {statistics.average.toFixed(2)}
+                </span>
+
+                <span className="text-[9px] text-slate-500">
+                    mmol/L
+                </span>
+
+            </div>
+
+            <p className="mt-1 text-[9px] text-slate-400">
+                All readings
+            </p>
+
+        </div>
+
+
+        {/* Highest */}
+
+        <div className="w-[115px] shrink-0 snap-start rounded-lg border border-red-100 bg-red-50 p-2">
+
+            <p className="text-[9px] font-semibold uppercase tracking-wide text-red-600">
+                Highest
+            </p>
+
+            <div className="mt-1 flex items-baseline gap-0.5">
+
+                <span className="text-lg font-bold text-slate-800">
+                    {statistics.highest.toFixed(2)}
+                </span>
+
+                <span className="text-[9px] text-slate-500">
+                    mmol/L
+                </span>
+
+            </div>
+
+            <p className="mt-1 truncate text-[9px] text-slate-400">
+                Maximum
+            </p>
+
+        </div>
+
+
+        {/* Lowest */}
+
+        <div className="w-[115px] shrink-0 snap-start rounded-lg border border-indigo-100 bg-indigo-50 p-2">
+
+            <p className="text-[9px] font-semibold uppercase tracking-wide text-indigo-600">
+                Lowest
+            </p>
+
+            <div className="mt-1 flex items-baseline gap-0.5">
+
+                <span className="text-lg font-bold text-slate-800">
+                    {statistics.lowest.toFixed(2)}
+                </span>
+
+                <span className="text-[9px] text-slate-500">
+                    mmol/L
+                </span>
+
+            </div>
+
+            <p className="mt-1 truncate text-[9px] text-slate-400">
+                Minimum
+            </p>
+
+        </div>
+
+
+        {/* Total */}
+
+        <div className="w-[115px] shrink-0 snap-start rounded-lg border border-slate-200 bg-slate-50 p-2">
+
+            <p className="text-[9px] font-semibold uppercase tracking-wide text-slate-500">
+                Total
+            </p>
+
+            <div className="mt-1">
+
+                <span className="text-lg font-bold text-slate-800">
+                    {statistics.totalReadings}
+                </span>
+
+            </div>
+
+            <p className="mt-1 text-[9px] text-slate-400">
+                Readings
+            </p>
+
+        </div>
+
+
+    </div>
+
+</div>
 
             {/* ========================================= */}
             {/* CHART HEADER */}

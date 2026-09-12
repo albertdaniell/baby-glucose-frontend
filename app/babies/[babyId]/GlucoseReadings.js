@@ -1,64 +1,128 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import {
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from "react";
+
 import { useRouter } from "next/navigation";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+const API_URL =
+    process.env.NEXT_PUBLIC_API_URL;
+
 
 const ALLOWED_EMAILS = [
     "albertagoya@gmail.com",
     "daisyoyuga@gmail.com",
 ];
 
-const PARENT_EMAIL_STORAGE_KEY = "baby_records_parent_email";
+
+const PARENT_EMAIL_STORAGE_KEY =
+    "baby_records_parent_email";
 
 
-export default function GlucoseReadings({ readings, babyId }) {
+export default function GlucoseReadings({
+    readings = [],
+    babyId,
+}) {
 
-    const router = useRouter();
+    const router =
+        useRouter();
+
+
+    // =========================
+    // DATE NAVIGATION
+    // =========================
+
+    const [activeDate, setActiveDate] =
+        useState(null);
+
+
+    const dateRefs =
+        useRef({});
 
 
     // =========================
     // AUTHORIZATION STATE
     // =========================
 
-    const [authorizedEmail, setAuthorizedEmail] = useState(null);
+    const [authorizedEmail, setAuthorizedEmail] =
+        useState(null);
 
 
     // =========================
     // EDIT STATES
     // =========================
 
-    const [selectedReading, setSelectedReading] = useState(null);
-    const [isEditing, setIsEditing] = useState(false);
+    const [selectedReading, setSelectedReading] =
+        useState(null);
 
-    const [value, setValue] = useState("");
-    const [date, setDate] = useState("");
-    const [time, setTime] = useState("");
-    const [notes, setNotes] = useState("");
 
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
+    const [isEditing, setIsEditing] =
+        useState(false);
+
+
+    const [value, setValue] =
+        useState("");
+
+
+    const [date, setDate] =
+        useState("");
+
+
+    const [time, setTime] =
+        useState("");
+
+
+    const [notes, setNotes] =
+        useState("");
+
+
+    const [loading, setLoading] =
+        useState(false);
+
+
+    const [error, setError] =
+        useState("");
 
 
     // =========================
     // DELETE STATES
     // =========================
 
-    const [readingToDelete, setReadingToDelete] = useState(null);
-    const [isDeleting, setIsDeleting] = useState(false);
-    const [deleteError, setDeleteError] = useState("");
+    const [readingToDelete, setReadingToDelete] =
+        useState(null);
+
+
+    const [isDeleting, setIsDeleting] =
+        useState(false);
+
+
+    const [deleteError, setDeleteError] =
+        useState("");
 
 
     // =========================
     // EMAIL VERIFICATION STATES
     // =========================
 
-    const [emailModal, setEmailModal] = useState(null);
-    const [pendingReading, setPendingReading] = useState(null);
+    const [emailModal, setEmailModal] =
+        useState(null);
 
-    const [parentEmail, setParentEmail] = useState("");
-    const [emailError, setEmailError] = useState("");
+
+    const [pendingReading, setPendingReading] =
+        useState(null);
+
+
+    const [parentEmail, setParentEmail] =
+        useState("");
+
+
+    const [emailError, setEmailError] =
+        useState("");
 
 
     // =========================
@@ -67,9 +131,10 @@ export default function GlucoseReadings({ readings, babyId }) {
 
     useEffect(() => {
 
-        const savedEmail = localStorage.getItem(
-            PARENT_EMAIL_STORAGE_KEY
-        );
+        const savedEmail =
+            localStorage.getItem(
+                PARENT_EMAIL_STORAGE_KEY
+            );
 
 
         if (!savedEmail) {
@@ -77,9 +142,10 @@ export default function GlucoseReadings({ readings, babyId }) {
         }
 
 
-        const normalizedEmail = savedEmail
-            .trim()
-            .toLowerCase();
+        const normalizedEmail =
+            savedEmail
+                .trim()
+                .toLowerCase();
 
 
         if (
@@ -94,8 +160,6 @@ export default function GlucoseReadings({ readings, babyId }) {
 
         } else {
 
-            // Remove invalid/old email
-
             localStorage.removeItem(
                 PARENT_EMAIL_STORAGE_KEY
             );
@@ -109,124 +173,377 @@ export default function GlucoseReadings({ readings, babyId }) {
     // GROUP READINGS BY DATE
     // =========================
 
-    const groupedReadings = useMemo(() => {
+    const groupedReadings =
+        useMemo(() => {
 
-        const groups = {};
-
-
-        readings.forEach((reading) => {
-
-            const readingDate =
-                reading.measured_date;
+            const groups = {};
 
 
-            if (!groups[readingDate]) {
+            readings.forEach(
+                (reading) => {
 
-                groups[readingDate] = [];
+                    const readingDate =
+                        reading.measured_date;
 
-            }
+
+                    if (!readingDate) {
+                        return;
+                    }
 
 
-            groups[readingDate].push(
-                reading
+                    if (!groups[readingDate]) {
+
+                        groups[readingDate] = [];
+
+                    }
+
+
+                    groups[readingDate].push(
+                        reading
+                    );
+
+                }
             );
 
-        });
+
+            return Object.entries(groups)
+
+                // Newest date first
+
+                .sort(
+                    ([dateA], [dateB]) => {
+
+                        return (
+                            new Date(
+                                `${dateB}T00:00:00`
+                            ) -
+                            new Date(
+                                `${dateA}T00:00:00`
+                            )
+                        );
+
+                    }
+                )
+
+                .map(
+                    ([
+                        readingDate,
+                        dateReadings,
+                    ]) => {
 
 
-        // Sort dates newest first
+                        // Sort by newest time first
 
-        return Object.entries(groups)
-            .sort(([dateA], [dateB]) => {
+                        const sortedReadings =
+                            [...dateReadings].sort(
+                                (a, b) => {
 
-                return new Date(dateB) -
-                    new Date(dateA);
+                                    return (
+                                        String(
+                                            b.measured_time || ""
+                                        ).localeCompare(
+                                            String(
+                                                a.measured_time || ""
+                                            )
+                                        )
+                                    );
 
-            })
-            .map(([readingDate, dateReadings]) => {
-
-
-                // Sort readings by time
-
-                const sortedReadings =
-                    [...dateReadings].sort(
-                        (a, b) => {
-
-                            return (
-                                b.measured_time
-                                    .localeCompare(
-                                        a.measured_time
-                                    )
+                                }
                             );
 
-                        }
-                    );
 
+                        // Calculate average
 
-                // Calculate average
+                        const total =
+                            dateReadings.reduce(
+                                (
+                                    sum,
+                                    reading
+                                ) => {
 
-                const total =
-                    dateReadings.reduce(
-                        (sum, reading) => {
+                                    return (
+                                        sum +
+                                        Number(
+                                            reading.value || 0
+                                        )
+                                    );
 
-                            return (
-                                sum +
-                                Number(reading.value)
+                                },
+                                0
                             );
 
-                        },
-                        0
+
+                        const average =
+                            dateReadings.length > 0
+                                ? total /
+                                dateReadings.length
+                                : 0;
+
+
+                        return {
+
+                            date:
+                                readingDate,
+
+                            readings:
+                                sortedReadings,
+
+                            average,
+
+                            totalReadings:
+                                dateReadings.length,
+
+                        };
+
+                    }
+                );
+
+        }, [readings]);
+
+
+    // =========================
+    // SET INITIAL ACTIVE DATE
+    // =========================
+
+    useEffect(() => {
+
+        if (
+            groupedReadings.length > 0 &&
+            !activeDate
+        ) {
+
+            setActiveDate(
+                groupedReadings[0].date
+            );
+
+        }
+
+    }, [
+        groupedReadings,
+        activeDate,
+    ]);
+
+
+    // =========================
+    // DETECT ACTIVE DATE
+    // =========================
+
+    useEffect(() => {
+
+        if (
+            groupedReadings.length === 0
+        ) {
+            return;
+        }
+
+
+        const observer =
+            new IntersectionObserver(
+
+                (entries) => {
+
+                    const visibleEntries =
+                        entries.filter(
+                            (entry) =>
+                                entry.isIntersecting
+                        );
+
+
+                    if (
+                        visibleEntries.length === 0
+                    ) {
+                        return;
+                    }
+
+
+                    const mostVisible =
+                        visibleEntries.reduce(
+                            (
+                                previous,
+                                current
+                            ) => {
+
+                                return current.intersectionRatio >
+                                    previous.intersectionRatio
+                                    ? current
+                                    : previous;
+
+                            }
+                        );
+
+
+                    const visibleDate =
+                        mostVisible.target.dataset.date;
+
+
+                    if (visibleDate) {
+
+                        setActiveDate(
+                            visibleDate
+                        );
+
+                    }
+
+                },
+
+                {
+
+                    root: null,
+
+                    threshold: [
+                        0.1,
+                        0.25,
+                        0.5,
+                        0.75,
+                    ],
+
+                    rootMargin:
+                        "-120px 0px -45% 0px",
+
+                }
+
+            );
+
+
+        const elements =
+            Object.values(
+                dateRefs.current
+            );
+
+
+        elements.forEach(
+            (element) => {
+
+                if (element) {
+
+                    observer.observe(
+                        element
                     );
 
+                }
 
-                const average =
-                    total /
-                    dateReadings.length;
+            }
+        );
 
 
-                return {
+        return () => {
 
-                    date: readingDate,
+            observer.disconnect();
 
-                    readings: sortedReadings,
+        };
 
-                    average,
-
-                    totalReadings:
-                        dateReadings.length,
-
-                };
-
-            });
-
-    }, [readings]);
+    }, [groupedReadings]);
 
 
     // =========================
     // FORMAT DATE
     // =========================
 
-    function formatDate(readingDate) {
+    function formatDate(
+        readingDate
+    ) {
 
-        const dateObject = new Date(
-            `${readingDate}T00:00:00`
-        );
+        if (!readingDate) {
+            return "";
+        }
+
+
+        const dateObject =
+            new Date(
+                `${readingDate}T00:00:00`
+            );
 
 
         return dateObject.toLocaleDateString(
             undefined,
             {
 
-                weekday: "long",
+                weekday:
+                    "long",
 
-                year: "numeric",
+                year:
+                    "numeric",
 
-                month: "long",
+                month:
+                    "long",
 
-                day: "numeric",
+                day:
+                    "numeric",
 
             }
         );
+
+    }
+
+
+    // =========================
+    // FORMAT SHORT DATE
+    // =========================
+
+    function formatShortDate(
+        readingDate
+    ) {
+
+        if (!readingDate) {
+            return "";
+        }
+
+
+        const dateObject =
+            new Date(
+                `${readingDate}T00:00:00`
+            );
+
+
+        return dateObject.toLocaleDateString(
+            undefined,
+            {
+
+                month:
+                    "short",
+
+                day:
+                    "numeric",
+
+            }
+        );
+
+    }
+
+
+    // =========================
+    // SCROLL TO DATE
+    // =========================
+
+    function scrollToDate(
+        readingDate
+    ) {
+
+        const element =
+            dateRefs.current[
+                readingDate
+            ];
+
+
+        if (!element) {
+            return;
+        }
+
+
+        setActiveDate(
+            readingDate
+        );
+
+
+        element.scrollIntoView({
+
+            behavior:
+                "smooth",
+
+            block:
+                "start",
+
+        });
 
     }
 
@@ -240,22 +557,26 @@ export default function GlucoseReadings({ readings, babyId }) {
         reading
     ) {
 
-
-        // If email is already verified,
-        // continue immediately
-
         if (authorizedEmail) {
 
-            if (action === "edit") {
+            if (
+                action === "edit"
+            ) {
 
-                openEditModal(reading);
+                openEditModal(
+                    reading
+                );
 
             }
 
 
-            if (action === "delete") {
+            if (
+                action === "delete"
+            ) {
 
-                openDeleteModal(reading);
+                openDeleteModal(
+                    reading
+                );
 
             }
 
@@ -265,28 +586,48 @@ export default function GlucoseReadings({ readings, babyId }) {
         }
 
 
-        // Otherwise ask for email
+        setPendingReading(
+            reading
+        );
 
-        setPendingReading(reading);
 
-        setParentEmail("");
+        setParentEmail(
+            ""
+        );
 
-        setEmailError("");
 
-        setEmailModal(action);
+        setEmailError(
+            ""
+        );
+
+
+        setEmailModal(
+            action
+        );
 
     }
 
 
     function closeEmailModal() {
 
-        setEmailModal(null);
+        setEmailModal(
+            null
+        );
 
-        setPendingReading(null);
 
-        setParentEmail("");
+        setPendingReading(
+            null
+        );
 
-        setEmailError("");
+
+        setParentEmail(
+            ""
+        );
+
+
+        setEmailError(
+            ""
+        );
 
     }
 
@@ -314,10 +655,6 @@ export default function GlucoseReadings({ readings, babyId }) {
         }
 
 
-        // =========================
-        // SAVE EMAIL TO LOCAL STORAGE
-        // =========================
-
         localStorage.setItem(
 
             PARENT_EMAIL_STORAGE_KEY,
@@ -327,9 +664,9 @@ export default function GlucoseReadings({ readings, babyId }) {
         );
 
 
-        // Store in component state
-
-        setAuthorizedEmail(email);
+        setAuthorizedEmail(
+            email
+        );
 
 
         const action =
@@ -343,16 +680,24 @@ export default function GlucoseReadings({ readings, babyId }) {
         closeEmailModal();
 
 
-        if (action === "edit") {
+        if (
+            action === "edit"
+        ) {
 
-            openEditModal(reading);
+            openEditModal(
+                reading
+            );
 
         }
 
 
-        if (action === "delete") {
+        if (
+            action === "delete"
+        ) {
 
-            openDeleteModal(reading);
+            openDeleteModal(
+                reading
+            );
 
         }
 
@@ -363,90 +708,129 @@ export default function GlucoseReadings({ readings, babyId }) {
     // EDIT FUNCTIONS
     // =========================
 
-    function openEditModal(reading) {
+    function openEditModal(
+        reading
+    ) {
 
-        setSelectedReading(reading);
+        setSelectedReading(
+            reading
+        );
 
-        setValue(reading.value);
 
-        setDate(reading.measured_date);
+        setValue(
+            reading.value ?? ""
+        );
 
-        setTime(reading.measured_time);
+
+        setDate(
+            reading.measured_date ?? ""
+        );
+
+
+        setTime(
+            reading.measured_time ?? ""
+        );
+
 
         setNotes(
             reading.notes || ""
         );
 
-        setError("");
 
-        setIsEditing(true);
+        setError(
+            ""
+        );
+
+
+        setIsEditing(
+            true
+        );
 
     }
 
 
     function closeEditModal() {
 
-        if (loading) return;
+        if (loading) {
+            return;
+        }
 
 
-        setIsEditing(false);
+        setIsEditing(
+            false
+        );
 
-        setSelectedReading(null);
 
-        setError("");
+        setSelectedReading(
+            null
+        );
+
+
+        setError(
+            ""
+        );
 
     }
 
 
-    async function handleUpdate(event) {
+    async function handleUpdate(
+        event
+    ) {
 
         event.preventDefault();
 
 
-        if (!selectedReading) return;
+        if (!selectedReading) {
+            return;
+        }
 
 
-        setLoading(true);
+        setLoading(
+            true
+        );
 
-        setError("");
+
+        setError(
+            ""
+        );
 
 
         try {
 
-            const response = await fetch(
+            const response =
+                await fetch(
 
-                `${API_URL}/babies/${babyId}/readings/${selectedReading.id}/`,
+                    `${API_URL}/babies/${babyId}/readings/${selectedReading.id}/`,
 
-                {
+                    {
 
-                    method: "PATCH",
+                        method:
+                            "PATCH",
 
-                    headers: {
+                        headers: {
 
-                        "Content-Type":
-                            "application/json",
+                            "Content-Type":
+                                "application/json",
 
-                    },
+                        },
 
-                    body: JSON.stringify({
+                        body:
+                            JSON.stringify({
 
-                        value:
-                            Number(value),
+                                value:
+                                    Number(value),
 
-                        date:
-                            date,
+                                date,
 
-                        time:
-                            time,
+                                time,
 
-                        notes:
-                            notes,
+                                notes,
 
-                    }),
+                            }),
 
-                }
+                    }
 
-            );
+                );
 
 
             const data =
@@ -455,7 +839,10 @@ export default function GlucoseReadings({ readings, babyId }) {
 
             if (!response.ok) {
 
-                console.error(data);
+                console.error(
+                    data
+                );
+
 
                 setError(
                     "Could not update the glucose reading."
@@ -466,9 +853,14 @@ export default function GlucoseReadings({ readings, babyId }) {
             }
 
 
-            setIsEditing(false);
+            setIsEditing(
+                false
+            );
 
-            setSelectedReading(null);
+
+            setSelectedReading(
+                null
+            );
 
 
             router.refresh();
@@ -476,7 +868,9 @@ export default function GlucoseReadings({ readings, babyId }) {
 
         } catch (error) {
 
-            console.error(error);
+            console.error(
+                error
+            );
 
 
             setError(
@@ -486,7 +880,9 @@ export default function GlucoseReadings({ readings, babyId }) {
 
         } finally {
 
-            setLoading(false);
+            setLoading(
+                false
+            );
 
         }
 
@@ -497,50 +893,73 @@ export default function GlucoseReadings({ readings, babyId }) {
     // DELETE FUNCTIONS
     // =========================
 
-    function openDeleteModal(reading) {
+    function openDeleteModal(
+        reading
+    ) {
 
-        setReadingToDelete(reading);
+        setReadingToDelete(
+            reading
+        );
 
-        setDeleteError("");
+
+        setDeleteError(
+            ""
+        );
 
     }
 
 
     function closeDeleteModal() {
 
-        if (isDeleting) return;
+        if (isDeleting) {
+            return;
+        }
 
 
-        setReadingToDelete(null);
+        setReadingToDelete(
+            null
+        );
 
-        setDeleteError("");
+
+        setDeleteError(
+            ""
+        );
 
     }
 
 
     async function handleDelete() {
 
-        if (!readingToDelete) return;
+        if (!readingToDelete) {
+            return;
+        }
 
 
-        setIsDeleting(true);
+        setIsDeleting(
+            true
+        );
 
-        setDeleteError("");
+
+        setDeleteError(
+            ""
+        );
 
 
         try {
 
-            const response = await fetch(
+            const response =
+                await fetch(
 
-                `${API_URL}/babies/${babyId}/readings/${readingToDelete.id}/`,
+                    `${API_URL}/babies/${babyId}/readings/${readingToDelete.id}/`,
 
-                {
+                    {
 
-                    method: "DELETE",
+                        method:
+                            "DELETE",
 
-                }
+                    }
 
-            );
+                );
 
 
             if (!response.ok) {
@@ -554,7 +973,9 @@ export default function GlucoseReadings({ readings, babyId }) {
             }
 
 
-            setReadingToDelete(null);
+            setReadingToDelete(
+                null
+            );
 
 
             router.refresh();
@@ -562,7 +983,9 @@ export default function GlucoseReadings({ readings, babyId }) {
 
         } catch (error) {
 
-            console.error(error);
+            console.error(
+                error
+            );
 
 
             setDeleteError(
@@ -572,7 +995,9 @@ export default function GlucoseReadings({ readings, babyId }) {
 
         } finally {
 
-            setIsDeleting(false);
+            setIsDeleting(
+                false
+            );
 
         }
 
@@ -591,10 +1016,12 @@ export default function GlucoseReadings({ readings, babyId }) {
             {/* GLUCOSE READINGS */}
             {/* ========================= */}
 
-            <section className="rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <section className="relative rounded-2xl border border-slate-200 bg-white shadow-sm">
 
 
-                {/* Header */}
+                {/* ========================= */}
+                {/* HEADER */}
+                {/* ========================= */}
 
                 <div className="border-b border-slate-100 p-6">
 
@@ -614,7 +1041,9 @@ export default function GlucoseReadings({ readings, babyId }) {
                 </div>
 
 
-                {/* Empty State */}
+                {/* ========================= */}
+                {/* EMPTY STATE */}
+                {/* ========================= */}
 
                 {readings.length === 0 ? (
 
@@ -637,253 +1066,382 @@ export default function GlucoseReadings({ readings, babyId }) {
 
                 ) : (
 
-                    <div className="space-y-8 p-5">
+                    <>
 
 
-                        {/* ========================= */}
-                        {/* DATE GROUPS */}
-                        {/* ========================= */}
+                        {/* ========================================= */}
+                        {/* MOBILE DATE NAVIGATION */}
+                        {/* ========================================= */}
 
-                        {groupedReadings.map(
-                            (group) => (
+                        <div className="sticky top-0 z-30 border-b border-slate-100 bg-white/95 px-4 py-3 backdrop-blur lg:hidden">
 
-                                <div
-                                    key={group.date}
-                                >
+                            <div className="overflow-x-auto">
 
-
-                                    {/* ========================= */}
-                                    {/* DATE HEADER */}
-                                    {/* ========================= */}
-
-                                    <div className="mb-4">
-
-                                        <h3 className="text-lg font-bold text-slate-800">
-
-                                            {formatDate(
-                                                group.date
-                                            )}
-
-                                        </h3>
-
-                                    </div>
+                                <div className="flex w-max gap-2 pr-4">
 
 
-                                    {/* ========================= */}
-                                    {/* DAILY SUMMARY CARDS */}
-                                    {/* ========================= */}
+                                    {groupedReadings.map(
+                                        (group) => {
 
-                                    <div className="mb-4 grid grid-cols-2 gap-3">
-
-
-                                        {/* Average */}
-
-                                        <div className="rounded-2xl border border-sky-100 bg-sky-50 p-4">
-
-                                            <p className="text-xs font-medium uppercase tracking-wide text-sky-600">
-
-                                                Daily Average
-
-                                            </p>
+                                            const isActive =
+                                                activeDate ===
+                                                group.date;
 
 
-                                            <div className="mt-2 flex items-baseline gap-1">
+                                            return (
 
-                                                <span className="text-3xl font-bold text-slate-800">
-
-                                                    {group.average.toFixed(2)}
-
-                                                </span>
-
-
-                                                <span className="text-sm text-slate-500">
-
-                                                    mmol/L
-
-                                                </span>
-
-                                            </div>
-
-                                        </div>
-
-
-                                        {/* Number of readings */}
-
-                                        <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-
-                                            <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
-
-                                                Readings
-
-                                            </p>
-
-
-                                            <div className="mt-2 flex items-baseline gap-1">
-
-                                                <span className="text-3xl font-bold text-slate-800">
-
-                                                    {group.totalReadings}
-
-                                                </span>
-
-
-                                                <span className="text-sm text-slate-500">
-
-                                                    recorded
-
-                                                </span>
-
-                                            </div>
-
-                                        </div>
-
-                                    </div>
-
-
-                                    {/* ========================= */}
-                                    {/* READINGS */}
-                                    {/* ========================= */}
-
-                                    <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white">
-
-
-                                        {group.readings.map(
-                                            (reading) => (
-
-                                                <div
-                                                    key={
-                                                        reading.id
+                                                <button
+                                                    key={group.date}
+                                                    type="button"
+                                                    onClick={() =>
+                                                        scrollToDate(
+                                                            group.date
+                                                        )
                                                     }
-                                                    className="flex items-center justify-between gap-4 border-b border-slate-100 p-5 last:border-b-0 transition hover:bg-sky-50"
+                                                    className={`shrink-0 rounded-full px-4 py-2 text-xs font-semibold transition ${
+                                                        isActive
+                                                            ? "bg-sky-500 text-white shadow-sm"
+                                                            : "bg-slate-100 text-slate-600 hover:bg-sky-100 hover:text-sky-700"
+                                                    }`}
                                                 >
 
+                                                    {formatShortDate(
+                                                        group.date
+                                                    )}
 
-                                                    {/* Reading Information */}
+                                                </button>
 
-                                                    <div className="min-w-0">
+                                            );
 
+                                        }
+                                    )}
 
-                                                        {/* Value */}
+                                </div>
 
-                                                        <div className="flex items-baseline gap-2">
+                            </div>
 
-                                                            <span className="text-2xl font-bold text-slate-800">
-
-                                                                {
-                                                                    reading.value
-                                                                }
-
-                                                            </span>
-
-
-                                                            <span className="text-sm text-slate-500">
-
-                                                                mmol/L
-
-                                                            </span>
-
-                                                        </div>
+                        </div>
 
 
-                                                        {/* Mobile Time */}
+                        {/* ========================================= */}
+                        {/* CONTENT + DESKTOP MENU */}
+                        {/* ========================================= */}
 
-                                                        <div className="mt-1 text-sm text-slate-500 sm:hidden">
-
-                                                            {
-                                                                reading.measured_time
-                                                            }
-
-                                                        </div>
+                        <div className="relative">
 
 
-                                                        {/* Notes */}
+                            {/* ========================= */}
+                            {/* DESKTOP DATE MENU */}
+                            {/* ========================= */}
 
-                                                        {reading.notes && (
+                            <aside className="absolute right-4 top-6 z-20 hidden w-36 lg:block">
 
-                                                            <p className="mt-1 truncate text-sm text-slate-500">
+                                <div className="sticky top-6 rounded-2xl border border-slate-200 bg-white p-2 shadow-lg">
 
-                                                                {
-                                                                    reading.notes
-                                                                }
 
-                                                            </p>
+                                    <p className="px-2 pb-2 pt-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
 
+                                        Jump to date
+
+                                    </p>
+
+
+                                    <div className="max-h-[70vh] space-y-1 overflow-y-auto pr-1">
+
+
+                                        {groupedReadings.map(
+                                            (group) => {
+
+                                                const isActive =
+                                                    activeDate ===
+                                                    group.date;
+
+
+                                                return (
+
+                                                    <button
+                                                        key={group.date}
+                                                        type="button"
+                                                        onClick={() =>
+                                                            scrollToDate(
+                                                                group.date
+                                                            )
+                                                        }
+                                                        className={`w-full rounded-xl px-3 py-2 text-left text-xs font-medium transition ${
+                                                            isActive
+                                                                ? "bg-sky-500 text-white"
+                                                                : "text-slate-600 hover:bg-sky-50 hover:text-sky-700"
+                                                        }`}
+                                                    >
+
+                                                        {formatShortDate(
+                                                            group.date
                                                         )}
 
-                                                    </div>
+                                                    </button>
 
+                                                );
 
-                                                    {/* Right Side */}
-
-                                                    <div className="flex items-center gap-4">
-
-
-                                                        {/* Time */}
-
-                                                        <div className="hidden text-right text-sm sm:block">
-
-                                                            <p className="font-medium text-slate-700">
-
-                                                                {
-                                                                    reading.measured_time
-                                                                }
-
-                                                            </p>
-
-                                                        </div>
-
-
-                                                        {/* Actions */}
-
-                                                        <div className="flex gap-2">
-
-
-                                                            <button
-                                                                onClick={() =>
-                                                                    requestAuthorization(
-                                                                        "edit",
-                                                                        reading
-                                                                    )
-                                                                }
-                                                                className="rounded-lg bg-sky-100 px-3 py-2 text-sm font-medium text-sky-700 transition hover:bg-sky-200"
-                                                            >
-
-                                                                Edit
-
-                                                            </button>
-
-
-                                                            <button
-                                                                onClick={() =>
-                                                                    requestAuthorization(
-                                                                        "delete",
-                                                                        reading
-                                                                    )
-                                                                }
-                                                                className="rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-600 transition hover:bg-red-100"
-                                                            >
-
-                                                                Delete
-
-                                                            </button>
-
-                                                        </div>
-
-                                                    </div>
-
-                                                </div>
-
-                                            )
+                                            }
                                         )}
 
                                     </div>
 
                                 </div>
 
-                            )
-                        )}
+                            </aside>
 
-                    </div>
+
+                            {/* ========================= */}
+                            {/* DATE GROUPS */}
+                            {/* ========================= */}
+
+                            <div className="space-y-8 p-5 lg:pr-44">
+
+
+                                {groupedReadings.map(
+                                    (group) => (
+
+                                        <div
+                                            key={group.date}
+                                            ref={(element) => {
+
+                                                if (element) {
+
+                                                    dateRefs.current[
+                                                        group.date
+                                                    ] = element;
+
+                                                }
+
+                                            }}
+                                            data-date={
+                                                group.date
+                                            }
+                                            className="scroll-mt-24"
+                                        >
+
+
+                                            {/* ========================= */}
+                                            {/* DATE HEADER */}
+                                            {/* ========================= */}
+
+                                            <div className="mb-4">
+
+                                                <h3 className="text-lg font-bold text-slate-800">
+
+                                                    {formatDate(
+                                                        group.date
+                                                    )}
+
+                                                </h3>
+
+                                            </div>
+
+
+                                            {/* ========================= */}
+                                            {/* DAILY SUMMARY */}
+                                            {/* ========================= */}
+
+                                            <div className="mb-4 grid grid-cols-2 gap-3">
+
+
+                                                {/* Average */}
+
+                                                <div className="rounded-2xl border border-sky-100 bg-sky-50 p-4">
+
+                                                    <p className="text-xs font-medium uppercase tracking-wide text-sky-600">
+
+                                                        Daily Average
+
+                                                    </p>
+
+
+                                                    <div className="mt-2 flex items-baseline gap-1">
+
+                                                        <span className="text-3xl font-bold text-slate-800">
+
+                                                            {group.average.toFixed(
+                                                                2
+                                                            )}
+
+                                                        </span>
+
+
+                                                        <span className="text-sm text-slate-500">
+
+                                                            mmol/L
+
+                                                        </span>
+
+                                                    </div>
+
+                                                </div>
+
+
+                                                {/* Total */}
+
+                                                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+
+                                                    <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
+
+                                                        Readings
+
+                                                    </p>
+
+
+                                                    <div className="mt-2 flex items-baseline gap-1">
+
+                                                        <span className="text-3xl font-bold text-slate-800">
+
+                                                            {group.totalReadings}
+
+                                                        </span>
+
+
+                                                        <span className="text-sm text-slate-500">
+
+                                                            recorded
+
+                                                        </span>
+
+                                                    </div>
+
+                                                </div>
+
+                                            </div>
+
+
+                                            {/* ========================= */}
+                                            {/* READINGS LIST */}
+                                            {/* ========================= */}
+
+                                            <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white">
+
+
+                                                {group.readings.map(
+                                                    (reading) => (
+
+                                                        <div
+                                                            key={reading.id}
+                                                            className="flex items-center justify-between gap-4 border-b border-slate-100 p-5 last:border-b-0 transition hover:bg-sky-50"
+                                                        >
+
+
+                                                            {/* LEFT */}
+
+                                                            <div className="min-w-0">
+
+
+                                                                <div className="flex items-baseline gap-2">
+
+                                                                    <span className="text-2xl font-bold text-slate-800">
+
+                                                                        {reading.value}
+
+                                                                    </span>
+
+
+                                                                    <span className="text-sm text-slate-500">
+
+                                                                        mmol/L
+
+                                                                    </span>
+
+                                                                </div>
+
+
+                                                                <div className="mt-1 text-sm text-slate-500 sm:hidden">
+
+                                                                    {reading.measured_time}
+
+                                                                </div>
+
+
+                                                                {reading.notes && (
+
+                                                                    <p className="mt-1 truncate text-sm text-slate-500">
+
+                                                                        {reading.notes}
+
+                                                                    </p>
+
+                                                                )}
+
+                                                            </div>
+
+
+                                                            {/* RIGHT */}
+
+                                                            <div className="flex items-center gap-4">
+
+
+                                                                <div className="hidden text-right text-sm sm:block">
+
+                                                                    <p className="font-medium text-slate-700">
+
+                                                                        {reading.measured_time}
+
+                                                                    </p>
+
+                                                                </div>
+
+
+                                                                <div className="flex gap-2">
+
+
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() =>
+                                                                            requestAuthorization(
+                                                                                "edit",
+                                                                                reading
+                                                                            )
+                                                                        }
+                                                                        className="rounded-lg bg-sky-100 px-3 py-2 text-sm font-medium text-sky-700 transition hover:bg-sky-200"
+                                                                    >
+
+                                                                        Edit
+
+                                                                    </button>
+
+
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() =>
+                                                                            requestAuthorization(
+                                                                                "delete",
+                                                                                reading
+                                                                            )
+                                                                        }
+                                                                        className="rounded-lg bg-red-50 px-3 py-2 text-sm font-medium text-red-600 transition hover:bg-red-100"
+                                                                    >
+
+                                                                        Delete
+
+                                                                    </button>
+
+                                                                </div>
+
+                                                            </div>
+
+                                                        </div>
+
+                                                    )
+                                                )}
+
+                                            </div>
+
+                                        </div>
+
+                                    )
+                                )}
+
+                            </div>
+
+                        </div>
+
+                    </>
 
                 )}
 
@@ -908,9 +1466,6 @@ export default function GlucoseReadings({ readings, babyId }) {
                         }
                     >
 
-
-                        {/* Icon */}
-
                         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-sky-100 text-3xl">
 
                             🔐
@@ -930,16 +1485,12 @@ export default function GlucoseReadings({ readings, babyId }) {
                             <p className="mt-2 text-sm leading-6 text-slate-500">
 
                                 Please enter the parent's email address.
-
-                                Once verified, it will be remembered on this
-                                device.
+                                Once verified, it will be remembered on this device.
 
                             </p>
 
                         </div>
 
-
-                        {/* Email Input */}
 
                         <div className="mt-6">
 
@@ -981,8 +1532,6 @@ export default function GlucoseReadings({ readings, babyId }) {
                         </div>
 
 
-                        {/* Email Error */}
-
                         {emailError && (
 
                             <div className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
@@ -994,10 +1543,7 @@ export default function GlucoseReadings({ readings, babyId }) {
                         )}
 
 
-                        {/* Buttons */}
-
                         <div className="mt-6 flex gap-3">
-
 
                             <button
                                 type="button"
@@ -1047,9 +1593,6 @@ export default function GlucoseReadings({ readings, babyId }) {
                         }
                     >
 
-
-                        {/* Header */}
-
                         <div className="mb-6 flex items-center justify-between">
 
                             <div>
@@ -1084,15 +1627,10 @@ export default function GlucoseReadings({ readings, babyId }) {
                         </div>
 
 
-                        {/* Edit Form */}
-
                         <form
                             onSubmit={handleUpdate}
                             className="space-y-5"
                         >
-
-
-                            {/* Value */}
 
                             <div>
 
@@ -1131,10 +1669,7 @@ export default function GlucoseReadings({ readings, babyId }) {
                             </div>
 
 
-                            {/* Date and Time */}
-
                             <div className="grid grid-cols-2 gap-4">
-
 
                                 <div>
 
@@ -1186,8 +1721,6 @@ export default function GlucoseReadings({ readings, babyId }) {
                             </div>
 
 
-                            {/* Notes */}
-
                             <div>
 
                                 <label className="mb-2 block text-sm font-medium text-slate-700">
@@ -1217,8 +1750,6 @@ export default function GlucoseReadings({ readings, babyId }) {
                             </div>
 
 
-                            {/* Error */}
-
                             {error && (
 
                                 <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
@@ -1230,10 +1761,7 @@ export default function GlucoseReadings({ readings, babyId }) {
                             )}
 
 
-                            {/* Buttons */}
-
                             <div className="flex gap-3 pt-2">
-
 
                                 <button
                                     type="button"
@@ -1271,7 +1799,7 @@ export default function GlucoseReadings({ readings, babyId }) {
 
 
             {/* ========================= */}
-            {/* DELETE CONFIRMATION MODAL */}
+            {/* DELETE MODAL */}
             {/* ========================= */}
 
             {readingToDelete && (
@@ -1288,9 +1816,6 @@ export default function GlucoseReadings({ readings, babyId }) {
                         }
                     >
 
-
-                        {/* Icon */}
-
                         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-100 text-3xl">
 
                             🗑️
@@ -1299,7 +1824,6 @@ export default function GlucoseReadings({ readings, babyId }) {
 
 
                         <div className="mt-5 text-center">
-
 
                             <h2 className="font-[family-name:var(--font-baloo)] text-2xl text-slate-800">
 
@@ -1316,15 +1840,11 @@ export default function GlucoseReadings({ readings, babyId }) {
                             </p>
 
 
-                            {/* Reading Info */}
-
                             <div className="mt-5 rounded-2xl bg-sky-50 p-4">
-
 
                                 <p className="text-2xl font-bold text-slate-800">
 
                                     {readingToDelete.value}
-
 
                                     <span className="ml-2 text-sm font-normal text-slate-500">
 
@@ -1337,22 +1857,16 @@ export default function GlucoseReadings({ readings, babyId }) {
 
                                 <p className="mt-1 text-sm text-slate-500">
 
-                                    {
-                                        readingToDelete.measured_date
-                                    }
+                                    {readingToDelete.measured_date}
 
                                     {" • "}
 
-                                    {
-                                        readingToDelete.measured_time
-                                    }
+                                    {readingToDelete.measured_time}
 
                                 </p>
 
                             </div>
 
-
-                            {/* Delete Error */}
 
                             {deleteError && (
 
@@ -1365,10 +1879,7 @@ export default function GlucoseReadings({ readings, babyId }) {
                             )}
 
 
-                            {/* Buttons */}
-
                             <div className="mt-6 flex gap-3">
-
 
                                 <button
                                     type="button"
