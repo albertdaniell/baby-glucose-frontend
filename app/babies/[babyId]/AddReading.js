@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -9,6 +9,9 @@ const ALLOWED_EMAILS = [
     "albertagoya@gmail.com",
     "daisyoyuga@gmail.com",
 ];
+
+const PARENT_EMAIL_STORAGE_KEY =
+    "baby_records_parent_email";
 
 
 function getCurrentDate() {
@@ -26,33 +29,139 @@ function getCurrentTime() {
 
 
 export default function AddReading({ babyId }) {
+
     const router = useRouter();
+
+
+    // =========================
+    // AUTHORIZATION STATE
+    // =========================
+
+    const [authorizedEmail, setAuthorizedEmail] =
+        useState(null);
+
 
     // =========================
     // ADD READING MODAL
     // =========================
 
-    const [isOpen, setIsOpen] = useState(false);
+    const [isOpen, setIsOpen] =
+        useState(false);
+
 
     // =========================
     // EMAIL VERIFICATION MODAL
     // =========================
 
-    const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
-    const [parentEmail, setParentEmail] = useState("");
-    const [emailError, setEmailError] = useState("");
+    const [isEmailModalOpen, setIsEmailModalOpen] =
+        useState(false);
+
+
+    const [parentEmail, setParentEmail] =
+        useState("");
+
+
+    const [emailError, setEmailError] =
+        useState("");
+
 
     // =========================
     // FORM STATES
     // =========================
 
-    const [value, setValue] = useState("");
-    const [date, setDate] = useState(getCurrentDate);
-    const [time, setTime] = useState(getCurrentTime);
-    const [notes, setNotes] = useState("");
+    const [value, setValue] =
+        useState("");
 
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
+
+    const [date, setDate] =
+        useState(getCurrentDate);
+
+
+    const [time, setTime] =
+        useState(getCurrentTime);
+
+
+    const [notes, setNotes] =
+        useState("");
+
+
+    const [loading, setLoading] =
+        useState(false);
+
+
+    const [error, setError] =
+        useState("");
+
+
+    // =========================
+    // LOAD SAVED EMAIL
+    // =========================
+
+    useEffect(() => {
+
+        const savedEmail =
+            localStorage.getItem(
+                PARENT_EMAIL_STORAGE_KEY
+            );
+
+
+        if (!savedEmail) {
+            return;
+        }
+
+
+        const normalizedEmail =
+            savedEmail
+                .trim()
+                .toLowerCase();
+
+
+        if (
+            ALLOWED_EMAILS.includes(
+                normalizedEmail
+            )
+        ) {
+
+            setAuthorizedEmail(
+                normalizedEmail
+            );
+
+        } else {
+
+            // Remove invalid saved email
+
+            localStorage.removeItem(
+                PARENT_EMAIL_STORAGE_KEY
+            );
+
+        }
+
+    }, []);
+
+
+    // =========================
+    // ADD READING BUTTON
+    // =========================
+
+    function handleAddReading() {
+
+        // If email was already verified
+        // and saved, open directly
+
+        if (authorizedEmail) {
+
+            openModal();
+
+            return;
+
+        }
+
+
+        // Otherwise ask for email
+
+        openEmailModal();
+
+    }
 
 
     // =========================
@@ -60,16 +169,24 @@ export default function AddReading({ babyId }) {
     // =========================
 
     function openEmailModal() {
+
         setParentEmail("");
+
         setEmailError("");
+
         setIsEmailModalOpen(true);
+
     }
 
 
     function closeEmailModal() {
+
         setIsEmailModalOpen(false);
+
         setParentEmail("");
+
         setEmailError("");
+
     }
 
 
@@ -78,23 +195,66 @@ export default function AddReading({ babyId }) {
     // =========================
 
     function verifyEmail() {
-        const email = parentEmail.trim().toLowerCase();
+
+        const email =
+            parentEmail
+                .trim()
+                .toLowerCase();
+
 
         if (!email) {
-            setEmailError("Please enter a parent email address.");
+
+            setEmailError(
+                "Please enter a parent email address."
+            );
+
             return;
+
         }
 
-        if (!ALLOWED_EMAILS.includes(email)) {
+
+        if (
+            !ALLOWED_EMAILS.includes(email)
+        ) {
+
             setEmailError(
                 "This email is not authorized to add glucose readings."
             );
 
             return;
+
         }
 
+
+        // =========================
+        // SAVE EMAIL
+        // =========================
+
+        localStorage.setItem(
+
+            PARENT_EMAIL_STORAGE_KEY,
+
+            email
+
+        );
+
+
+        // Save in component state
+
+        setAuthorizedEmail(
+            email
+        );
+
+
+        // Close verification modal
+
         closeEmailModal();
+
+
+        // Open add reading modal
+
         openModal();
+
     }
 
 
@@ -103,18 +263,35 @@ export default function AddReading({ babyId }) {
     // =========================
 
     function openModal() {
-        setDate(getCurrentDate());
-        setTime(getCurrentTime());
+
+        setDate(
+            getCurrentDate()
+        );
+
+
+        setTime(
+            getCurrentTime()
+        );
+
+
         setError("");
+
         setIsOpen(true);
+
     }
 
 
     function closeModal() {
-        if (loading) return;
+
+        if (loading) {
+            return;
+        }
+
 
         setIsOpen(false);
+
         setError("");
+
     }
 
 
@@ -123,78 +300,146 @@ export default function AddReading({ babyId }) {
     // =========================
 
     async function handleSubmit(event) {
+
         event.preventDefault();
 
+
         setLoading(true);
+
         setError("");
 
+
         try {
-            const response = await fetch(
-                `${API_URL}/babies/${babyId}/readings/`,
-                {
-                    method: "POST",
 
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
+            const response =
+                await fetch(
 
-                    body: JSON.stringify({
-                        value: Number(value),
-                        date: date,
-                        time: time,
-                        notes: notes,
-                    }),
-                }
-            );
+                    `${API_URL}/babies/${babyId}/readings/`,
 
-            const data = await response.json();
+                    {
+
+                        method: "POST",
+
+                        headers: {
+
+                            "Content-Type":
+                                "application/json",
+
+                        },
+
+                        body:
+                            JSON.stringify({
+
+                                value:
+                                    Number(value),
+
+                                date:
+                                    date,
+
+                                time:
+                                    time,
+
+                                notes:
+                                    notes,
+
+                            }),
+
+                    }
+
+                );
+
+
+            const data =
+                await response.json();
+
 
             if (!response.ok) {
-                console.error(data);
-                setError("Could not save glucose reading.");
+
+                console.error(
+                    data
+                );
+
+
+                setError(
+                    "Could not save glucose reading."
+                );
+
                 return;
+
             }
 
-            // Reset form
+
+            // =========================
+            // RESET FORM
+            // =========================
+
             setValue("");
+
             setNotes("");
 
-            // Close modal
+
+            // =========================
+            // CLOSE MODAL
+            // =========================
+
             setIsOpen(false);
 
-            // Refresh readings
+
+            // =========================
+            // REFRESH READINGS
+            // =========================
+
             router.refresh();
 
+
         } catch (error) {
-            console.error(error);
+
+            console.error(
+                error
+            );
+
 
             setError(
                 "Something went wrong. Please try again."
             );
 
+
         } finally {
+
             setLoading(false);
+
         }
+
     }
 
 
     return (
+
         <>
+
             {/* ========================= */}
             {/* FLOATING ADD BUTTON */}
             {/* ========================= */}
 
             <button
-                onClick={openEmailModal}
+                type="button"
+                onClick={handleAddReading}
                 className="fixed bottom-6 right-6 z-40 flex items-center gap-2 rounded-full bg-sky-500 px-6 py-4 font-semibold text-white shadow-lg transition hover:scale-105 hover:bg-sky-600 active:scale-95"
             >
+
                 <span className="text-2xl leading-none">
+
                     +
+
                 </span>
 
+
                 <span>
+
                     Add Reading
+
                 </span>
+
             </button>
 
 
@@ -216,10 +461,13 @@ export default function AddReading({ babyId }) {
                         }
                     >
 
+
                         {/* Icon */}
 
                         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-sky-100 text-3xl">
+
                             🔐
+
                         </div>
 
 
@@ -228,12 +476,17 @@ export default function AddReading({ babyId }) {
                         <div className="mt-5 text-center">
 
                             <h2 className="font-[family-name:var(--font-baloo)] text-2xl text-slate-800">
+
                                 Parent Verification
+
                             </h2>
 
+
                             <p className="mt-2 text-sm leading-6 text-slate-500">
+
                                 Please enter the email address of the baby's
                                 parent to add a glucose reading.
+
                             </p>
 
                         </div>
@@ -247,7 +500,9 @@ export default function AddReading({ babyId }) {
                                 htmlFor="parent-email"
                                 className="mb-2 block text-sm font-medium text-slate-700"
                             >
+
                                 Parent Email
+
                             </label>
 
 
@@ -256,13 +511,24 @@ export default function AddReading({ babyId }) {
                                 type="email"
                                 value={parentEmail}
                                 onChange={(event) => {
-                                    setParentEmail(event.target.value);
+
+                                    setParentEmail(
+                                        event.target.value
+                                    );
+
                                     setEmailError("");
+
                                 }}
                                 onKeyDown={(event) => {
-                                    if (event.key === "Enter") {
+
+                                    if (
+                                        event.key === "Enter"
+                                    ) {
+
                                         verifyEmail();
+
                                     }
+
                                 }}
                                 placeholder="parent@email.com"
                                 autoFocus
@@ -277,7 +543,9 @@ export default function AddReading({ babyId }) {
                         {emailError && (
 
                             <div className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
+
                                 {emailError}
+
                             </div>
 
                         )}
@@ -292,7 +560,9 @@ export default function AddReading({ babyId }) {
                                 onClick={closeEmailModal}
                                 className="flex-1 rounded-xl bg-slate-100 px-4 py-3 font-semibold text-slate-700 transition hover:bg-slate-200"
                             >
+
                                 Cancel
+
                             </button>
 
 
@@ -301,7 +571,9 @@ export default function AddReading({ babyId }) {
                                 onClick={verifyEmail}
                                 className="flex-1 rounded-xl bg-sky-500 px-4 py-3 font-semibold text-white transition hover:bg-sky-600"
                             >
+
                                 Continue
+
                             </button>
 
                         </div>
@@ -331,6 +603,7 @@ export default function AddReading({ babyId }) {
                         }
                     >
 
+
                         {/* Modal Header */}
 
                         <div className="mb-6 flex items-center justify-between">
@@ -338,11 +611,16 @@ export default function AddReading({ babyId }) {
                             <div>
 
                                 <h2 className="font-[family-name:var(--font-baloo)] text-2xl text-slate-800">
+
                                     Add Glucose Reading 🩸
+
                                 </h2>
 
+
                                 <p className="mt-1 text-sm text-slate-500">
+
                                     Record the glucose level before feeding.
+
                                 </p>
 
                             </div>
@@ -355,7 +633,9 @@ export default function AddReading({ babyId }) {
                                 className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-xl text-slate-600 transition hover:bg-slate-200 disabled:opacity-60"
                                 aria-label="Close"
                             >
+
                                 ×
+
                             </button>
 
                         </div>
@@ -368,6 +648,7 @@ export default function AddReading({ babyId }) {
                             className="space-y-5"
                         >
 
+
                             {/* Glucose Value */}
 
                             <div>
@@ -376,7 +657,9 @@ export default function AddReading({ babyId }) {
                                     htmlFor="value"
                                     className="mb-2 block text-sm font-medium text-slate-700"
                                 >
+
                                     Glucose Value
+
                                 </label>
 
 
@@ -389,7 +672,9 @@ export default function AddReading({ babyId }) {
                                         min="0"
                                         value={value}
                                         onChange={(event) =>
-                                            setValue(event.target.value)
+                                            setValue(
+                                                event.target.value
+                                            )
                                         }
                                         placeholder="e.g. 4.5"
                                         required
@@ -399,7 +684,9 @@ export default function AddReading({ babyId }) {
 
 
                                     <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-slate-500">
+
                                         mmol/L
+
                                     </span>
 
                                 </div>
@@ -420,7 +707,9 @@ export default function AddReading({ babyId }) {
                                         htmlFor="date"
                                         className="mb-2 block text-sm font-medium text-slate-700"
                                     >
+
                                         Date
+
                                     </label>
 
 
@@ -429,7 +718,9 @@ export default function AddReading({ babyId }) {
                                         type="date"
                                         value={date}
                                         onChange={(event) =>
-                                            setDate(event.target.value)
+                                            setDate(
+                                                event.target.value
+                                            )
                                         }
                                         required
                                         className="w-full rounded-xl border border-slate-300 px-3 py-3 text-slate-900 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
@@ -446,7 +737,9 @@ export default function AddReading({ babyId }) {
                                         htmlFor="time"
                                         className="mb-2 block text-sm font-medium text-slate-700"
                                     >
+
                                         Time
+
                                     </label>
 
 
@@ -455,7 +748,9 @@ export default function AddReading({ babyId }) {
                                         type="time"
                                         value={time}
                                         onChange={(event) =>
-                                            setTime(event.target.value)
+                                            setTime(
+                                                event.target.value
+                                            )
                                         }
                                         required
                                         className="w-full rounded-xl border border-slate-300 px-3 py-3 text-slate-900 outline-none focus:border-sky-400 focus:ring-2 focus:ring-sky-100"
@@ -474,10 +769,13 @@ export default function AddReading({ babyId }) {
                                     htmlFor="notes"
                                     className="mb-2 block text-sm font-medium text-slate-700"
                                 >
+
                                     Notes
 
                                     <span className="ml-1 font-normal text-slate-400">
+
                                         (Optional)
+
                                     </span>
 
                                 </label>
@@ -487,7 +785,9 @@ export default function AddReading({ babyId }) {
                                     id="notes"
                                     value={notes}
                                     onChange={(event) =>
-                                        setNotes(event.target.value)
+                                        setNotes(
+                                            event.target.value
+                                        )
                                     }
                                     placeholder="Add any notes..."
                                     rows="3"
@@ -502,7 +802,9 @@ export default function AddReading({ babyId }) {
                             {error && (
 
                                 <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
+
                                     {error}
+
                                 </div>
 
                             )}
@@ -512,14 +814,15 @@ export default function AddReading({ babyId }) {
 
                             <div className="flex gap-3 pt-2">
 
-
                                 <button
                                     type="button"
                                     onClick={closeModal}
                                     disabled={loading}
                                     className="flex-1 rounded-xl bg-slate-100 px-4 py-3 font-semibold text-slate-700 transition hover:bg-slate-200 disabled:opacity-60"
                                 >
+
                                     Cancel
+
                                 </button>
 
 
@@ -528,9 +831,11 @@ export default function AddReading({ babyId }) {
                                     disabled={loading}
                                     className="flex-1 rounded-xl bg-sky-500 px-4 py-3 font-semibold text-white transition hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-60"
                                 >
+
                                     {loading
                                         ? "Saving..."
                                         : "Save Reading"}
+
                                 </button>
 
                             </div>
@@ -544,5 +849,7 @@ export default function AddReading({ babyId }) {
             )}
 
         </>
+
     );
+
 }

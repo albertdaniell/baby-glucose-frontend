@@ -52,6 +52,58 @@ export default function GlucoseReadings({
     const [authorizedEmail, setAuthorizedEmail] =
         useState(null);
 
+        useEffect(() => {
+
+    const savedEmail =
+
+        localStorage.getItem(
+
+            PARENT_EMAIL_STORAGE_KEY
+
+        );
+
+    if (!savedEmail) {
+
+        return;
+
+    }
+
+    const normalizedEmail =
+
+        savedEmail
+
+            .trim()
+
+            .toLowerCase();
+
+    if (
+
+        ALLOWED_EMAILS.includes(
+
+            normalizedEmail
+
+        )
+
+    ) {
+
+        setAuthorizedEmail(
+
+            normalizedEmail
+
+        );
+
+    } else {
+
+        localStorage.removeItem(
+
+            PARENT_EMAIL_STORAGE_KEY
+
+        );
+
+    }
+
+}, []);
+
 
     // =========================
     // EDIT STATES
@@ -551,48 +603,32 @@ export default function GlucoseReadings({
     // =========================
     // EMAIL AUTHORIZATION
     // =========================
+    // IMPORTANT:
+    //
+    // Edit and Delete ALWAYS ask
+    // for the parent's email.
+    //
+    // The saved email is only used
+    // to prefill the input.
+    // =========================
 
     function requestAuthorization(
         action,
         reading
     ) {
 
-        if (authorizedEmail) {
-
-            if (
-                action === "edit"
-            ) {
-
-                openEditModal(
-                    reading
-                );
-
-            }
-
-
-            if (
-                action === "delete"
-            ) {
-
-                openDeleteModal(
-                    reading
-                );
-
-            }
-
-
-            return;
-
-        }
-
+        // Always require verification
+        // for Edit and Delete
 
         setPendingReading(
             reading
         );
 
 
+        // Prefill saved email for convenience
+
         setParentEmail(
-            ""
+            authorizedEmail || ""
         );
 
 
@@ -655,6 +691,9 @@ export default function GlucoseReadings({
         }
 
 
+        // Save email for other components,
+        // such as Add Reading
+
         localStorage.setItem(
 
             PARENT_EMAIL_STORAGE_KEY,
@@ -679,6 +718,8 @@ export default function GlucoseReadings({
 
         closeEmailModal();
 
+
+        // Continue after successful verification
 
         if (
             action === "edit"
@@ -1012,16 +1053,10 @@ export default function GlucoseReadings({
 
         <>
 
-            {/* ========================= */}
-            {/* GLUCOSE READINGS */}
-            {/* ========================= */}
-
             <section className="relative rounded-2xl border border-slate-200 bg-white shadow-sm">
 
 
-                {/* ========================= */}
                 {/* HEADER */}
-                {/* ========================= */}
 
                 <div className="border-b border-slate-100 p-6">
 
@@ -1041,9 +1076,7 @@ export default function GlucoseReadings({
                 </div>
 
 
-                {/* ========================= */}
                 {/* EMPTY STATE */}
-                {/* ========================= */}
 
                 {readings.length === 0 ? (
 
@@ -1069,9 +1102,7 @@ export default function GlucoseReadings({
                     <>
 
 
-                        {/* ========================================= */}
                         {/* MOBILE DATE NAVIGATION */}
-                        {/* ========================================= */}
 
                         <div className="sticky top-0 z-30 border-b border-slate-100 bg-white/95 px-4 py-3 backdrop-blur lg:hidden">
 
@@ -1123,21 +1154,14 @@ export default function GlucoseReadings({
                         </div>
 
 
-                        {/* ========================================= */}
-                        {/* CONTENT + DESKTOP MENU */}
-                        {/* ========================================= */}
-
                         <div className="relative">
 
 
-                            {/* ========================= */}
                             {/* DESKTOP DATE MENU */}
-                            {/* ========================= */}
 
                             <aside className="absolute right-4 top-6 z-20 hidden w-36 lg:block">
 
                                 <div className="sticky top-6 rounded-2xl border border-slate-200 bg-white p-2 shadow-lg">
-
 
                                     <p className="px-2 pb-2 pt-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
 
@@ -1147,7 +1171,6 @@ export default function GlucoseReadings({
 
 
                                     <div className="max-h-[70vh] space-y-1 overflow-y-auto pr-1">
-
 
                                         {groupedReadings.map(
                                             (group) => {
@@ -1192,12 +1215,9 @@ export default function GlucoseReadings({
                             </aside>
 
 
-                            {/* ========================= */}
                             {/* DATE GROUPS */}
-                            {/* ========================= */}
 
                             <div className="space-y-8 p-5 lg:pr-44">
-
 
                                 {groupedReadings.map(
                                     (group) => (
@@ -1221,10 +1241,7 @@ export default function GlucoseReadings({
                                             className="scroll-mt-24"
                                         >
 
-
-                                            {/* ========================= */}
                                             {/* DATE HEADER */}
-                                            {/* ========================= */}
 
                                             <div className="mb-4">
 
@@ -1239,14 +1256,10 @@ export default function GlucoseReadings({
                                             </div>
 
 
-                                            {/* ========================= */}
                                             {/* DAILY SUMMARY */}
-                                            {/* ========================= */}
 
                                             <div className="mb-4 grid grid-cols-2 gap-3">
 
-
-                                                {/* Average */}
 
                                                 <div className="rounded-2xl border border-sky-100 bg-sky-50 p-4">
 
@@ -1279,8 +1292,6 @@ export default function GlucoseReadings({
                                                 </div>
 
 
-                                                {/* Total */}
-
                                                 <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
 
                                                     <p className="text-xs font-medium uppercase tracking-wide text-slate-500">
@@ -1312,12 +1323,9 @@ export default function GlucoseReadings({
                                             </div>
 
 
-                                            {/* ========================= */}
                                             {/* READINGS LIST */}
-                                            {/* ========================= */}
 
                                             <div className="overflow-hidden rounded-2xl border border-slate-100 bg-white">
-
 
                                                 {group.readings.map(
                                                     (reading) => (
@@ -1327,11 +1335,7 @@ export default function GlucoseReadings({
                                                             className="flex items-center justify-between gap-4 border-b border-slate-100 p-5 last:border-b-0 transition hover:bg-sky-50"
                                                         >
 
-
-                                                            {/* LEFT */}
-
                                                             <div className="min-w-0">
-
 
                                                                 <div className="flex items-baseline gap-2">
 
@@ -1371,8 +1375,6 @@ export default function GlucoseReadings({
                                                             </div>
 
 
-                                                            {/* RIGHT */}
-
                                                             <div className="flex items-center gap-4">
 
 
@@ -1388,7 +1390,6 @@ export default function GlucoseReadings({
 
 
                                                                 <div className="flex gap-2">
-
 
                                                                     <button
                                                                         type="button"
@@ -1484,8 +1485,7 @@ export default function GlucoseReadings({
 
                             <p className="mt-2 text-sm leading-6 text-slate-500">
 
-                                Please enter the parent's email address.
-                                Once verified, it will be remembered on this device.
+                                Please enter the parent's email address to continue.
 
                             </p>
 
