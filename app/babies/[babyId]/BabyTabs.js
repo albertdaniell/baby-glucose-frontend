@@ -80,14 +80,14 @@ export default function BabyTabs({ baby, readings, readingsError }) {
                 <div>
                   <p className="text-sm text-slate-500">Name</p>
 
-                  <p className="font-semibold text-slate-900">{baby.name}</p>
+                  <p className="font-semibold text-slate-900">{baby?.name}</p>
                 </div>
 
                 <div>
                   <p className="text-sm text-slate-500">Date of Birth</p>
 
                   <p className="font-semibold text-slate-900">
-                    {baby.date_of_birth}
+                    {baby?.date_of_birth}
                   </p>
                 </div>
 
@@ -95,7 +95,7 @@ export default function BabyTabs({ baby, readings, readingsError }) {
                   <p className="text-sm text-slate-500">Baby Unique ID</p>
 
                   <p className="break-all font-semibold text-slate-900">
-                    {baby.baby_id}
+                    {baby?.baby_id}
                   </p>
                 </div>
               </div>
@@ -103,7 +103,7 @@ export default function BabyTabs({ baby, readings, readingsError }) {
 
             {/* LATEST GLUCOSE READING */}
 
-            {readings.length > 0 ? (
+            {readings?.length > 0 ? (
               <section className="relative overflow-hidden rounded-3xl border border-purple-100 bg-gradient-to-br from-purple-100 via-purple-50 to-white p-6 shadow-sm lg:col-span-2">
                 {/* Decorative Background */}
 
@@ -155,7 +155,7 @@ export default function BabyTabs({ baby, readings, readingsError }) {
                       <p className="mt-3 text-sm text-slate-500">
                         Recorded for{" "}
                         <span className="font-semibold text-slate-700">
-                          {baby.name}
+                          {baby?.name}
                         </span>
                       </p>
                     </div>
@@ -217,7 +217,7 @@ export default function BabyTabs({ baby, readings, readingsError }) {
                 <p className="mt-2 max-w-sm text-sm leading-6 text-slate-500">
                   No glucose readings have been recorded for{" "}
                   <span className="font-semibold text-slate-700">
-                    {baby.name}
+                    {baby?.name}
                   </span>{" "}
                   yet. Add the first reading to start tracking glucose levels.
                 </p>
@@ -233,17 +233,17 @@ export default function BabyTabs({ baby, readings, readingsError }) {
 
           {/* GLUCOSE CHART */}
 
-          {readings.length > 0 && <GlucoseChart readings={readings} />}
+          {readings?.length > 0 && <GlucoseChart readings={readings} />}
 
           {/* ADD READING */}
 
           <section className="mb-8">
-            <AddReading babyId={baby.baby_id} />
+            <AddReading babyId={baby?.baby_id} />
           </section>
 
           {/* GLUCOSE READINGS */}
 
-          <GlucoseReadings readings={readings} babyId={baby.baby_id} />
+          <GlucoseReadings readings={readings} babyId={baby?.baby_id} />
         </div>
       )}
 
@@ -251,7 +251,7 @@ export default function BabyTabs({ baby, readings, readingsError }) {
                 BABY DRUGS TAB
             ========================================== */}
 
-      {activeTab === "drugs" && <BabyDrugs baby={baby} babyId={baby.baby_id} />}
+      {activeTab === "drugs" && <BabyDrugs baby={baby} babyId={baby?.baby_id} />}
     </>
   );
 }
